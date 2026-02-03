@@ -1,0 +1,6 @@
+@core10_graphql_postgres_HostAddress = http://localhost:5094
+
+GET {{core10_graphql_postgres_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
