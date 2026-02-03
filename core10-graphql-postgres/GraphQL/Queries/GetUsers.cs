@@ -6,10 +6,26 @@ namespace core10_graphql_postgres.GraphQL.Queries;
 [ExtendObjectType("Query")]
 public class GetallUsers
 {
-    [UseProjection] // Enables EF to only fetch requested fields
+    [UseProjection]
     [UseFiltering]
     [UseSorting]    
 
     public IQueryable<User> ListallUsers(GraphqlDbContext context) 
         => context.Users;
 }
+
+// ======Nitro Request======
+// query {
+//   listallUsers {
+//     id        
+//     firstname
+//     lastname
+//     email
+//     mobile
+//     username
+//     isactivated
+//     isblocked
+//     profilepic
+//   }
+// }
+

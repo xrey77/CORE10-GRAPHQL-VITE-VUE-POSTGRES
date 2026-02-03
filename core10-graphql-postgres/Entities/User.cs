@@ -28,6 +28,8 @@ public class User {
     public string Qrcodeurl {get; set;}
 
     public string Profilepic {get; set;}
+
+    [Column("secretkey", TypeName ="text")]
     public string Secretkey  {get; set;}
 
     [Column("created_at")]
