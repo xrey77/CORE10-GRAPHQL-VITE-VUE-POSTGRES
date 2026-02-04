@@ -13,7 +13,7 @@ public record SigninInput(string Username, string Password);
 public record SigninResponse(
     string Firstname, string Lastname, string Email, string Mobile,
     string Username, int Isactivated, int Isblocked, string Profilepic,
-    string Qrcodeurl, string Rolename, string Token);
+    string Qrcodeurl, string Rolename, string Token, string Message);
 
 [ExtendObjectType("Mutation")]
 public class UserLogin
@@ -100,13 +100,14 @@ public class UserLogin
             userDtls.Profilepic,
             userDtls.Qrcodeurl,
             userDtls.Rolename,
-            tokenString
+            tokenString,
+            "You have logged-in successfully, please wait."
             );
     }
 }
 
 // =======Nitro GraphQL Request===========
-// mutation Sigin($input: SigninInput!) {
+// mutation Signin($input: SigninInput!) {
 //   signin(input: $input) {
 //       firstname
 //       lastname
