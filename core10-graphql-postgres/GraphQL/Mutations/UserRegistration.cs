@@ -37,7 +37,7 @@ public class UserRegistration
         var key = Encoding.ASCII.GetBytes(keyString);
         var tokenHandler = new JwtSecurityTokenHandler();
 
-        User userEmail = context.Users.Where(c => c.Email == input.Email).FirstOrDefault();
+        var userEmail = context.Users.Where(c => c.Email == input.Email).FirstOrDefault();
         if (userEmail is not null) {
             throw new GraphQLException(
                     ErrorBuilder.New()
@@ -46,7 +46,7 @@ public class UserRegistration
                         .Build());                
         }
 
-        User userName = context.Users.Where(c => c.Username == input.Username).FirstOrDefault();
+        var userName = context.Users.Where(c => c.Username == input.Username).FirstOrDefault();
         if (userName is not null) {
             throw new GraphQLException(
                     ErrorBuilder.New()

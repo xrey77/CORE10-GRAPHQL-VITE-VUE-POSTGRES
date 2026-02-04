@@ -52,7 +52,11 @@ public class GraphqlDbContext : DbContext
             entity.Property(e => e.UpdatedAt)
                 .HasDefaultValueSql("now()");
         });
-    }
+
+        modelBuilder.Entity<Sale>()
+                .Property(s => s.Monthdate)
+                .HasColumnType("date");         
+            }
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
             var entries = ChangeTracker.Entries()

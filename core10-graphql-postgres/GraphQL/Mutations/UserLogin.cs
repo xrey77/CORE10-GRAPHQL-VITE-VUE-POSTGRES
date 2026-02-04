@@ -3,17 +3,27 @@ using core10_graphql_postgres.Helpers;
 using HotChocolate;
 using Microsoft.EntityFrameworkCore; 
 namespace core10_graphql_postgres.GraphQL.Mutations;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Security.Claims;
 
 public record SigninInput(string Username, string Password);
 
 public record SigninResponse(
     string Firstname, string Lastname, string Email, string Mobile,
     string Username, int Isactivated, int Isblocked, string Profilepic,
-    string Qrcodeurl, string Rolename);
+    string Qrcodeurl, string Rolename, string Token);
 
 [ExtendObjectType("Mutation")]
 public class UserLogin
 {
+    IConfiguration config = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json")
+        .AddEnvironmentVariables()
+        .Build();
+
+
     [UseMutationConvention]
     public async Task<SigninResponse> Signin(
         SigninInput input, 
@@ -58,8 +68,26 @@ public class UserLogin
                     .Build());
         }
 
-        Role role = context.Roles.Where(r => r.Id == userDtls.Id).FirstOrDefault();
+        var role = context.Roles.Where(r => r.Id == userDtls.Id).FirstOrDefault();
         userDtls.Rolename = role?.Name ?? "No Role Assigned";
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(config["Jwt:Key"]);
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userDtls.Id.ToString()),
+                new Claim(ClaimTypes.Name, userDtls.Username)
+            }),
+            Expires = DateTime.UtcNow.AddHours(1), // Set token expiration
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+            Issuer = config["Jwt:Issuer"],
+            Audience = config["Jwt:Audience"]
+        };
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var tokenString = tokenHandler.WriteToken(token);
+
 
         return new SigninResponse(
             userDtls.Firstname,
@@ -71,7 +99,8 @@ public class UserLogin
             userDtls.Isblocked,
             userDtls.Profilepic,
             userDtls.Qrcodeurl,
-            userDtls.Rolename
+            userDtls.Rolename,
+            tokenString
             );
     }
 }
@@ -85,7 +114,10 @@ public class UserLogin
 //       mobile
 //       username      
 //       isactivated
-//       isblocked    
+//       isblocked 
+//       profilepic
+//       rolename
+//       token
 //   }
 // }
 

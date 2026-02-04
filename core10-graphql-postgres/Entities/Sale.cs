@@ -13,6 +13,6 @@ public class Sale
    [Column(TypeName = "decimal(18,2)")] 
    public decimal Amount { get; set; }
 
-   [Column("date", TypeName = "timestamp with time zone")]   
-   public DateTime Date { get; set; }
+   [Column("monthdate", TypeName = "date")]   
+   public DateOnly Monthdate { get; set; }
 }

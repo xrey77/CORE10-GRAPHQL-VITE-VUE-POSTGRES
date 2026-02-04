@@ -10,6 +10,8 @@ public class Product {
         [Column("id")]
         public int Id { get; set; }
         public string Category { get; set; }
+
+        [Column("descriptions")]
         public string Descriptions { get; set; }
         public int Qty { get; set; }
         public string Unit { get; set; }
