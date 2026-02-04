@@ -11,7 +11,7 @@ using System.Security.Claims;
 public record SigninInput(string Username, string Password);
 
 public record SigninResponse(
-    string Firstname, string Lastname, string Email, string Mobile,
+    int Id, string Firstname, string Lastname, string Email, string Mobile,
     string Username, int Isactivated, int Isblocked, string Profilepic,
     string Qrcodeurl, string Rolename, string Token, string Message);
 
@@ -24,12 +24,13 @@ public class UserLogin
         .Build();
 
 
-    [UseMutationConvention]
+    // [UseMutationConvention]
+    [UseMutationConvention(Disable = true)]     
     public async Task<SigninResponse> Signin(
         SigninInput input, 
         [Service] GraphqlDbContext context)        
     {
-        var userDtls = await context.Users
+        User userDtls = await context.Users
             .FirstOrDefaultAsync(c => c.Username == input.Username);
 
         if (userDtls == null) 
@@ -90,6 +91,7 @@ public class UserLogin
 
 
         return new SigninResponse(
+            userDtls.Id,
             userDtls.Firstname,
             userDtls.Lastname,
             userDtls.Email,

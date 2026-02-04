@@ -38,7 +38,7 @@ import Mfa from './Mfa.vue';
 import { defineComponent } from 'vue';
 
 const api = axios.create({
-  baseURL: "http://localhost:5094/graphql",
+  baseURL: "http://localhost:5094",
   headers: {'Accept': 'application/json',
             'Content-Type': 'application/json'}
 });
@@ -65,6 +65,7 @@ export default defineComponent({
                 query: `
                 mutation Signin($input: SigninInput!) {
                     signin(input: $input) {
+                        id
                         firstname
                         lastname
                         email
@@ -105,7 +106,8 @@ export default defineComponent({
                         window.sessionStorage.setItem('TOKEN', result.token);
                         setTimeout(() => {
                             this.resetLogin();
-                            jQuery("#closeLogin").trigger('click');                            
+                            jQuery("#closeLogin").trigger('click'); 
+                            location.reload();                           
                         }, 3000);
                     } else {
                         window.sessionStorage.setItem('USERID', result.id);

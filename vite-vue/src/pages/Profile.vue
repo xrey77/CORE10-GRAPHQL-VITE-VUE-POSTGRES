@@ -189,7 +189,7 @@
         mounted(){
             const _usrid = sessionStorage.getItem('USERID');
             if (_usrid) {
-                this.userid = _usrid
+                this.userid =  _usrid;
             }
             const _token = sessionStorage.getItem("TOKEN");
             if (_token) {
@@ -200,63 +200,83 @@
         },
         methods: {
             getUserprofile: async function() {
-              await api.get(`api/getuserid/${this.userid}/`, { headers: {
-                Authorization: `Bearer ${this.token}`
-            }} )
-                .then((res: any) => {
-                        this.profileMsg = res.data.message;
-                        this.firstname = res.data.firstname;
-                        this.lastname = res.data.lastname;
-                        this.email = res.data.email;
-                        this.mobile = res.data.mobile;
-                        this.profilepic = res.data.userpic;
-                        if (res.data.qrcodeurl === null) {
-                            this.qrcodeurl = '/images/qrcode.png';
-                        } else {
-                            let qrcode: any = 'data:image/png;base64,'+res.data.qrcodeurl;
-                            this.qrcodeurl = qrcode;
+                const userPayload = {
+                    query: `
+                    query GetUser($userid: Int!) {
+                        userById(id: $userid) {
+                            firstname
+                            lastname
+                            email
+                            mobile
+                            profilepic
+                            qrcodeurl
                         }
-                        setTimeout(() => {
-                            this.profileMsg = '';    
-                        }, 1000);
-                  }, (error: any) => {
-                        if (error.response) {
-                            this.profileMsg = error.response.data.message;
-                        } else {
-                            this.profileMsg = error.message;
-                        }
-                        setTimeout(() => {
-                            this.profileMsg = '';    
-                        }, 3000);
-                });
-            },
-            submitProfile: function() {
-                const data =JSON.stringify({lastname: this.lastname, 
-                    firstname: this.firstname, mobile: this.mobile });
-    
-                api.patch(`/api/updateprofile/${this.userid}/`, data, { headers: {
-                Authorization: `Bearer ${this.token}`
-                }} )
-                .then((res: any) => {
-                        this.profileMsg = res.data.message;
-                        window.setTimeout(() => {
-                            this.profileMsg = '';
-                        }, 3000);
+                    }
+                    `,
+                    variables: {
+                        userid:  parseInt(this.userid)
+                    }
+                };
+
+                try {
+                    const res = await api.post('/graphql', userPayload); 
+                    
+                    if (res.data.errors) {
+                        this.profileMsg = res.data.errors[0].message;
                         return;
-                  }, (error: any) => {
-                        if (error.response) {
-                            this.profileMsg = error.response.data.message;
-                        } else {
-                            this.profileMsg = error.message;
+                    } else {
+                        const result = res.data.data?.userById; 
+                        if (result) {
+                            this.firstname = result[0].firstname;
+                            this.lastname = result[0].lastname;
+                            this.email = result[0].email;
+                            this.mobile = result[0].mobile;
+                            this.profilepic = `http://localhost:5094/users/${result[0].profilepic}`;
+                            this.qrcodeurl = result[0].qrcodeurl ?? '/images/qrcode.png';
+                            setTimeout(() => { this.profileMsg = '' }, 3000);
                         }
-                        window.setTimeout(() => {
-                            this.profileMsg = '';
-                        }, 3000);
-                        return;
-                });
-    
+                    }
+                } catch (error: any) {
+                    this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message;
+                    setTimeout(() => { this.profileMsg = '' }, 3000);
+                }
             },
-            changePassword: function() {
+            submitProfile: async function() {
+                const profilePayload = {
+                    query: `
+                    mutation UpdateProfile($input: UpdateProfileInput!) {
+                        profileUpdate(input: $input) {
+                            message
+                        }
+                    }
+                    `,
+                    variables: {
+                        input: { 
+                            id: parseInt(this.userid),
+                            firstname: this.firstname,
+                            lastname: this.lastname,
+                            mobile: this.mobile
+                        }
+                    }
+                };
+
+                try {
+                    const res = await api.post('/graphql', profilePayload); 
+                    
+                    if (res.data.errors) {
+                        this.profileMsg = res.data.errors[0].message;
+                        return;
+                    } else {
+                        const result = res.data.data?.profileUpdate; 
+                        this.profileMsg = result.message;                        
+                    }
+                } catch (error: any) {
+                    this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message || "An error occurred";
+                } finally {
+                    setTimeout(() => { this.profileMsg = ''; }, 3000);
+                }    
+            },
+            changePassword: async function() {
                 if (this.password === '') {
                     this.profileMsg = "Please enter New Password.";
                     setTimeout(() => {
@@ -278,58 +298,91 @@
                     }, 3000);
                     return;
                 }
-                const data =JSON.stringify({password: this.password });
-                api.patch(`api/changepassword/${this.userid}/`, data, { headers: {
-                Authorization: `Bearer ${this.token}`
-                }} )
-                .then((res: any) => {
-                        this.profileMsg = res.data.message;
-                        window.setTimeout(() => {
-                            this.profileMsg = '';
-                        }, 3000);
-                  }, (error) => {
-                    if (error.response) {
-                            this.profileMsg = error.response.data.message;
-                    } else {
-                        this.profileMsg = error.message;
-                    }
-                    window.setTimeout(() => {
-                            this.profileMsg = '';
-                        }, 3000);
-                        return;
-                });
-    
-    
-            },
-            changePicture: function(event: any) {
-                event.preventDefault();            
-                    jQuery("#userpic").attr('src',URL.createObjectURL(event.target.files[0]));
-                    const formdata = new FormData();
-                    formdata.append('userpic', event.target.files[0]);
-    
-                    api.patch(`api/uploadpicture/${this.userid}/`, formdata, { headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${this.token}`
-                    }} )
-                    .then((res: any) => {
-                        this.profileMsg = res.data.message;
-                        setTimeout(() => {
-                            sessionStorage.setItem('USERPIC',res.data.userpic);
-                            this.profileMsg = '';
-                            this.profilepic = res.data.userpic;
-                            location.reload();
-                        }, 3000);
-                    }, (error: any) => {
-                        if (error.response) {
-                            this.profileMsg = error.response.data.message;
-                        } else {
-                            this.profileMsg = error.message;
+                const changePayload = {
+                    query: `
+                    mutation UpdateUserPassword($input: UpdatePasswordInput!) {
+                        updatePassword(input: $input) {
+                            message
                         }
-                        window.setTimeout(() => {
-                                this.profileMsg = '';
-                            }, 3000);
-                            return;
-                    });    
+                    }
+                    `,
+                    variables: {
+                        input: { 
+                            id: parseInt(this.userid),
+                            password: this.password,
+                        }
+                    }
+                };
+
+                try {
+                    const res = await api.post('/graphql', changePayload); 
+                    
+                    if (res.data.errors) {
+                        this.profileMsg = res.data.errors[0].message;
+                        return;
+                    } else {
+                        const result = res.data.data?.profileUpdate; 
+                        this.profileMsg = result.message;                        
+                    }
+                } catch (error: any) {
+                    this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message || "An error occurred";
+                } finally {
+                    setTimeout(() => { this.profileMsg = ''; }, 3000);
+                }        
+            },
+            changePicture: async function(event: any) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                // 1. Update UI Preview
+                jQuery("#userpic").attr('src', URL.createObjectURL(file));
+
+                const query = `mutation UploadPicture($id: Int!, $profilepic: Upload!) {
+                    updateProfilepic(id: $id, profilepic: $profilepic) {
+                        user { id profilepic }
+                        message
+                    }
+                }`.replace(/\s+/g, ' ').trim();
+
+                const operations = JSON.stringify({
+                    query: query,
+                    variables: { 
+                        id: parseInt(this.userid), 
+                        profilepic: null // Placeholder for the upload scalar
+                    }
+                });
+
+
+                // 3. Map the file to the 'profilepic' variable
+                const map = JSON.stringify({
+                    "0": ["variables.profilepic"] 
+                });
+
+                // 4. Construct FormData
+                const formData = new FormData();
+                formData.append("operations", operations);
+                formData.append("map", map);
+                formData.append("0", file); 
+
+                try {
+                    const res = await api.post('/graphql', formData, {
+                        headers: {
+                            'GraphQL-Preflight': '1'
+                        }
+                    });
+
+                    if (res.data.errors) {
+                        console.log(res.data.errors[0]);
+                        this.profileMsg = res.data.errors[0].message;
+                    } else {
+                        console.log("sucess...............");
+                        this.profileMsg = res.data.data.updateProfilepic.message;
+                        // Optionally update the local user state with res.data.data.updateProfilepic.user
+                    }
+                } catch (error: any) {
+                    console.log(error.message);
+                    this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message;
+                }
             },
             checkboxPassword: function() {
                 if (this.chgPwd) {
@@ -361,56 +414,74 @@
                     this.showSave = false;
                 }
             },
-            enableMFA: function() {
-                const data =JSON.stringify({TwoFactorEnabled: true });
-                api.patch(`api/mfa/activate/${this.userid}/`, data, { headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${this.token}`
-                }})
-                .then((res: any) => {
-                        this.profileMsg = res.data.message;
-                        window.setTimeout(() => {
-                            this.profileMsg = '';
-                            let qrcode: any = 'data:image/png;base64,'+res.data.qrcodeurl;
-                            this.qrcodeurl = qrcode;
-                        }, 2000);
-                  }, (error) => {
-                    if (error.response) {
-                            this.profileMsg = error.response.data.message;
-                    } else {
-                        this.profileMsg = error.message;
-                    }
-                    window.setTimeout(() => {
-                            this.profileMsg = '';
-                        }, 3000);
-                });
-            },
-            disableMFA: function() {
-                const data =JSON.stringify({TwoFactorEnabled: false });
-                api.patch(`api/mfa/activate/${this.userid}/`, data, { headers: {
-                    Authorization: `Bearer ${this.token}`
-                }} )
-                .then((res: any) => {
-                        this.qrcodeurl = '/images/qrcode.png';
-                        this.profileMsg = res.data.message;
-                        window.setTimeout(() => {
-                            this.profileMsg = '';
-                        }, 3000);
-                  }, (error) => {
-                        if (error.response) {
-                            this.profileMsg = error.response.data.message;
-                        } else {
-                            this.profileMsg = error.message;
+            enableMFA: async function() {
+                const enablePayload = {
+                    query: `
+                    mutation ActivateMfa($input: ActivationInput!) {
+                        mfaActivation(input: $input) {
+                            message
                         }
-                        window.setTimeout(() => {
-                            this.profileMsg = '';
-                        }, 3000);
-                });
-    
+                    }
+                    `,
+                    variables: {
+                        input: { 
+                            id: parseInt(this.userid),
+                            twoFactorEnabled: true,
+                        }
+                    }
+                };
+
+                try {
+                    const res = await api.post('/graphql', enablePayload); 
+                    
+                    if (res.data.errors) {
+                        this.profileMsg = res.data.errors[0].message;
+                        return;
+                    } else {
+                        const result = res.data.data?.profileUpdate; 
+                        this.profileMsg = result.message;                        
+                    }
+                } catch (error: any) {
+                    this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message || "An error occurred";
+                } finally {
+                    setTimeout(() => { this.profileMsg = ''; }, 3000);
+                }        
+
             },
-    
-        }
-    
+            disableMFA: async function() {
+                const disablePayload = {
+                    query: `
+                    mutation ActivateMfa($input: ActivationInput!) {
+                        mfaActivation(input: $input) {
+                            message
+                        }
+                    }
+                    `,
+                    variables: {
+                        input: { 
+                            id: parseInt(this.userid),
+                            twoFactorEnabled: false,
+                        }
+                    }
+                };
+
+                try {
+                    const res = await api.post('/graphql', disablePayload); 
+                    
+                    if (res.data.errors) {
+                        this.profileMsg = res.data.errors[0].message;
+                        return;
+                    } else {
+                        const result = res.data.data?.profileUpdate; 
+                        this.profileMsg = result.message;                        
+                    }
+                } catch (error: any) {
+                    this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message || "An error occurred";
+                } finally {
+                    setTimeout(() => { this.profileMsg = ''; }, 3000);
+                }        
+            },
+        }    
     })
     </script>
     
