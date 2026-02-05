@@ -25,6 +25,8 @@ builder.Services
     .AddTypeExtension<GetUser>()
     .AddTypeExtension<ProductsList>()
     .AddTypeExtension<ProductSearch>()
+    .AddTypeExtension<ProductReport>()
+    .AddTypeExtension<ChartData>()
     .AddMutationType(d => d.Name("Mutation"))
     .AddMutationConventions()
     .AddTypeExtension<UserRegistration>()

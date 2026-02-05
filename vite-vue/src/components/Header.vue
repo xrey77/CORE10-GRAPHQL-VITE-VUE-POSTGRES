@@ -92,8 +92,8 @@ export default defineComponent({
                 Reports
               </a>
               <ul class="dropdown-menu">
-                <li><RouterLink class="dropdown-item" to="#/">Products Report - PDF</RouterLink></li>
-                <li><RouterLink class="dropdown-item" to="#/">Annual Sales Chart</RouterLink></li>
+                <li><RouterLink class="dropdown-item" to="/productsreport">Products Report - PDF</RouterLink></li>
+                <li><RouterLink class="dropdown-item" to="/saleschart">Annual Sales Chart</RouterLink></li>
               </ul>
             </li>
 
@@ -170,9 +170,9 @@ export default defineComponent({
         </RouterLink>
         <ul class="dropdown-menu">
           <li data-bs-dismiss="offcanvas">
-            <RouterLink class="dropdown-item" to="#/">Products Report - PDF</RouterLink></li>
+            <RouterLink class="dropdown-item" to="/productsreport">Products Report - PDF</RouterLink></li>
           <li data-bs-dismiss="offcanvas">
-            <RouterLink class="dropdown-item" to="#/">Annual Sales Chart</RouterLink></li>
+            <RouterLink class="dropdown-item" to="/saleschart">Annual Sales Chart</RouterLink></li>
         </ul>
       </li>
 

@@ -6,6 +6,8 @@ import Profile from '../pages/Profile.vue';
 import List from '../pages/List.vue';
 import Catalogs from '../pages/Catalogs.vue';
 import Search from '../pages/Search.vue';
+import SalesChart from '../pages/SalesChart.vue';
+import PdfReport from '../pages/PdfReport.vue';
 
 const routes: Array<RouteRecordRaw> = [
     { path: '/', name: 'Home', component: Home },
@@ -15,6 +17,8 @@ const routes: Array<RouteRecordRaw> = [
     { path: "/listproducts",name: "List",component: List},
     { path: "/listcatalogs",name: "Catalogs",component: Catalogs },
     { path: "/searchproduct",name: "Search",component: Search },
+    { path: "/productsreport",name: "PdfReport",component: PdfReport },
+    { path: "/saleschart",name: "SalesChart",component: SalesChart },
 ];
 
 const router = createRouter({
