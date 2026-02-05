@@ -82,7 +82,7 @@ export default defineComponent({
                 }
                 `,
                 variables: {
-                    input: { // Must match the $input variable name in your mutation
+                    input: { 
                         username: this.username,
                         password: this.password
                     }
@@ -125,6 +125,7 @@ export default defineComponent({
                 this.message = error.response?.data?.errors?.[0]?.message || error.message || "An error occurred";
             } finally {
                 setTimeout(() => { this.message = ''; }, 3000);
+                this.isDisabled = false;
             }
         },  
         closeLogin: function() {

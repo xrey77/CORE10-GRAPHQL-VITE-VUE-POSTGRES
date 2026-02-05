@@ -8,67 +8,66 @@ using Path = System.IO.Path;
 
 namespace core10_graphql_postgres.GraphQL.Mutations;
 
-public record UploadMessage(User User, string Message);
+public class UploadResponse
+{
+    public int Id { get; set; }
+    public string Message { get; set; } = string.Empty;
+}
+
 
 [ExtendObjectType("Mutation")]
-public class UploadPicture
+public class ChangeProfilePic
 {
-    public async Task<UploadMessage> UpdateProfilepic(
+    
+    public async Task<UploadResponse> ProfilePicUploadAsync(
         int id,
-        IFile  profilepic,
-        [Service] GraphqlDbContext context)        
+        IFile profilepic,
+        [Service] GraphqlDbContext dbContext, 
+        IWebHostEnvironment env)
     {
-        var user = await context.Users.FindAsync(id) ?? throw new GraphQLException(ErrorBuilder.New()
-                .SetMessage("User ID not found.")
-                .SetCode("USER_ID_NOT_FOUND")
-                .Build());
-
-        // Determine path
-        string ext = Path.GetExtension(profilepic.Name);
-        var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "users");
-        // Directory.CreateDirectory(folderPath);
-
-        var fileName = $"00{id}{ext}";
-        var fullPath = Path.Combine(folderPath, fileName);
-
-        // Process image with ImageSharp
-        using (var stream = profilepic.OpenReadStream())
-        using (var image = await SixLabors.ImageSharp.Image.LoadAsync(stream))
+        var user = await dbContext.Users.FindAsync(id);
+        if (user == null)
         {
-            image.Mutate(x => x.Resize(100, 100));
-            await image.SaveAsync(fullPath);
+            throw new GraphQLException($"User with ID {id} not found");
         }
 
-        user.Profilepic = fileName;
-        await context.SaveChangesAsync();
+        var extension = Path.GetExtension(profilepic.Name);
+        var newFile = $"00{id}{extension}";
+        var uploadPath = Path.Combine(env.WebRootPath, "users", newFile);
 
-        return new UploadMessage(user, "Profile picture updated successfully.");
+        await using Stream stream = profilepic.OpenReadStream();
+        using (var fileStream = new FileStream(uploadPath, FileMode.Create))
+        {
+            await stream.CopyToAsync(fileStream);
+        }
+
+        user.Profilepic = newFile;
+        await dbContext.SaveChangesAsync();
+
+        return new UploadResponse
+        {
+            Id = id,
+            Message = "You have changed your profile picture successfully."
+        };
     }
 }
 
+
 // =======Nitro GraphQL Request===========
-// mutation UploadPicture($input: ImageInput!) {
-//   updateProfilepic(input: $input) {
-//      id
-//      profilepic
-//   }
-// }
-
-// mutation UpdateUserPic($id: Int!, $file: Upload!) {
-//   updateProfilepic(input: { id: $id, profilepic: $file }) {
-//     message
-//     user {
-//       id
-//       profilepic
+// mutation ChangeProfilePic($input: ProfilePicUploadInput!) {
+//     profilePicUpload(input: $input) {
+//         uploadResponse {
+//             id
+//             message
+//         }
 //     }
-//   }
 // }
 
 
-// GraphQL Variables
+// =======GraphQL Variables======
 // {
-//     "input": {
-//       "id": "Rey",
-//       "profilepic": ""
+//     input: {
+//         id: 1,
+//         profilepic: null
 //     }
-// }  
+// }

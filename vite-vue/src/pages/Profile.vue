@@ -154,13 +154,12 @@
     import Footer from '../components/Footer.vue';
     import jQuery from 'jquery';
     import axios from 'axios';
+import { errorMessages } from 'vue/compiler-sfc';
     
     // const selectedFile = ref<File | null>(null);
     
     const api = axios.create({
-        baseURL: "http://localhost:5094",
-        headers: {'Accept': 'application/json',
-                  'Content-Type': 'application/json'}
+        baseURL: "http://localhost:5094"
     })
     
     export default defineComponent({
@@ -244,18 +243,28 @@
             submitProfile: async function() {
                 const profilePayload = {
                     query: `
-                    mutation UpdateProfile($input: UpdateProfileInput!) {
-                        profileUpdate(input: $input) {
-                            message
+                    mutation UpdateUserProfile($input: UpdateProfileInput!) {
+                        updateProfile(input: $input) {
+                            profileMessage {
+                               user {
+                                  id
+                                  firstname
+                                  lastname
+                                  mobile
+                               }
+                                  message
+                            }
                         }
                     }
                     `,
                     variables: {
                         input: { 
-                            id: parseInt(this.userid),
-                            firstname: this.firstname,
-                            lastname: this.lastname,
-                            mobile: this.mobile
+                            input: {
+                                id: parseInt(this.userid),
+                                firstname: this.firstname,
+                                lastname: this.lastname,
+                                mobile: this.mobile
+                            }
                         }
                     }
                 };
@@ -267,8 +276,8 @@
                         this.profileMsg = res.data.errors[0].message;
                         return;
                     } else {
-                        const result = res.data.data?.profileUpdate; 
-                        this.profileMsg = result.message;                        
+                        const result = res.data.data?.updateProfile.profileMessage.message;
+                        this.profileMsg = result;                        
                     }
                 } catch (error: any) {
                     this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message || "An error occurred";
@@ -300,16 +309,24 @@
                 }
                 const changePayload = {
                     query: `
-                    mutation UpdateUserPassword($input: UpdatePasswordInput!) {
+                    mutation ChangeUserPassword($input: UpdatePasswordInput!) {
                         updatePassword(input: $input) {
-                            message
+                            responseMessage {
+                                user {
+                                    id
+                                    password
+                                }
+                                    message
+                            }
                         }
                     }
                     `,
                     variables: {
                         input: { 
-                            id: parseInt(this.userid),
-                            password: this.password,
+                            input: {
+                                id: parseInt(this.userid),
+                                password: this.password,
+                            }
                         }
                     }
                 };
@@ -321,7 +338,7 @@
                         this.profileMsg = res.data.errors[0].message;
                         return;
                     } else {
-                        const result = res.data.data?.profileUpdate; 
+                        const result = res.data.data?.updatePassword.responseMessage.message
                         this.profileMsg = result.message;                        
                     }
                 } catch (error: any) {
@@ -334,54 +351,54 @@
                 const file = event.target.files[0];
                 if (!file) return;
 
-                // 1. Update UI Preview
                 jQuery("#userpic").attr('src', URL.createObjectURL(file));
 
-                const query = `mutation UploadPicture($id: Int!, $profilepic: Upload!) {
-                    updateProfilepic(id: $id, profilepic: $profilepic) {
-                        user { id profilepic }
-                        message
-                    }
-                }`.replace(/\s+/g, ' ').trim();
-
                 const operations = JSON.stringify({
-                    query: query,
+                    query: `
+                        mutation ChangeProfilePic($input: ProfilePicUploadInput!) {
+                            profilePicUpload(input: $input) {
+                                uploadResponse {
+                                    id
+                                    message
+                                }
+                            }
+                        }
+                    `,
                     variables: { 
-                        id: parseInt(this.userid), 
-                        profilepic: null // Placeholder for the upload scalar
+                        input: {
+                            id: parseInt(this.userid),
+                            profilepic: null // This remains null here; the map links it
+                        }
                     }
                 });
 
-
-                // 3. Map the file to the 'profilepic' variable
-                const map = JSON.stringify({
-                    "0": ["variables.profilepic"] 
-                });
-
-                // 4. Construct FormData
-                const formData = new FormData();
-                formData.append("operations", operations);
-                formData.append("map", map);
-                formData.append("0", file); 
+                const map = JSON.stringify({ "0": ["variables.input.profilepic"] });
 
                 try {
+                    const formData = new FormData();
+                    formData.append("operations", operations);
+                    formData.append("map", map);
+                    formData.append("0", file); 
+
                     const res = await api.post('/graphql', formData, {
                         headers: {
+                            'Content-Type': 'multipart/form-data',
                             'GraphQL-Preflight': '1'
                         }
                     });
 
                     if (res.data.errors) {
-                        console.log(res.data.errors[0]);
                         this.profileMsg = res.data.errors[0].message;
+                        setTimeout(() => { this.profileMsg = ''; }, 3000);
+                        return;
                     } else {
-                        console.log("sucess...............");
-                        this.profileMsg = res.data.data.updateProfilepic.message;
-                        // Optionally update the local user state with res.data.data.updateProfilepic.user
+                        this.profileMsg = res.data.data.profilePicUpload.uploadResponse.message;
+                        setTimeout(() => { this.profileMsg = ''; }, 3000);
+                        return;
                     }
                 } catch (error: any) {
-                    console.log(error.message);
                     this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message;
+                    setTimeout(() => { this.profileMsg = ''; }, 3000);
                 }
             },
             checkboxPassword: function() {
@@ -417,16 +434,24 @@
             enableMFA: async function() {
                 const enablePayload = {
                     query: `
-                    mutation ActivateMfa($input: ActivationInput!) {
+                    mutation ActivateMfa($input: MfaActivationInput!) {
                         mfaActivation(input: $input) {
-                            message
+                            activationResponse {
+                                user {
+                                    id        
+                                    qrcodeurl
+                                }
+                                message
+                            }
                         }
                     }
                     `,
                     variables: {
                         input: { 
-                            id: parseInt(this.userid),
-                            twoFactorEnabled: true,
+                            input: {
+                                id: parseInt(this.userid),
+                                twoFactorEnabled: true,
+                            }
                         }
                     }
                 };
@@ -438,11 +463,15 @@
                         this.profileMsg = res.data.errors[0].message;
                         return;
                     } else {
-                        const result = res.data.data?.profileUpdate; 
-                        this.profileMsg = result.message;                        
+                        console.log(res.data.data);
+                        const result = res.data.data?.mfaActivation.activationResponse;
+
+                        this.profileMsg = result.message;
+                        this.qrcodeurl = result.user.qrcodeurl;
                     }
                 } catch (error: any) {
                     this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message || "An error occurred";
+                    
                 } finally {
                     setTimeout(() => { this.profileMsg = ''; }, 3000);
                 }        
@@ -451,16 +480,23 @@
             disableMFA: async function() {
                 const disablePayload = {
                     query: `
-                    mutation ActivateMfa($input: ActivationInput!) {
+                    mutation ActivateMfa($input: MfaActivationInput!) {
                         mfaActivation(input: $input) {
-                            message
+                            activationResponse {
+                                user {
+                                    id        
+                                }
+                                message
+                            }
                         }
                     }
                     `,
                     variables: {
                         input: { 
-                            id: parseInt(this.userid),
-                            twoFactorEnabled: false,
+                            input: {
+                                id: parseInt(this.userid),
+                                twoFactorEnabled: false,
+                            }
                         }
                     }
                 };
@@ -472,8 +508,9 @@
                         this.profileMsg = res.data.errors[0].message;
                         return;
                     } else {
-                        const result = res.data.data?.profileUpdate; 
-                        this.profileMsg = result.message;                        
+                        const result = res.data.data?.mfaActivation.activationResponse.message 
+                        this.profileMsg = result;         
+                        this.qrcodeurl = "http://localhost:5094/images/qrcode.png";               
                     }
                 } catch (error: any) {
                     this.profileMsg = error.response?.data?.errors?.[0]?.message || error.message || "An error occurred";

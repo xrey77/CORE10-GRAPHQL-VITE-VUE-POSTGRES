@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace core10_graphql_postgres.GraphQL.Mutations;
 
-    public record ActivationInput(int Id, Boolean TwoFactorEnabled);
+    public record ActivationInput(
+        [property: ID] int Id,
+        Boolean TwoFactorEnabled);
     public record ActivationResponse(User User, string Qrcode, string Message);
 
     [ExtendObjectType("Mutation")]
@@ -14,7 +16,7 @@ namespace core10_graphql_postgres.GraphQL.Mutations;
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]        
         [UseMutationConvention]
-        public async Task<ActivationResponse> MfaActivation(
+        public async Task<ActivationResponse> MfaActivationAsync(
             ActivationInput input, 
             [Service] GraphqlDbContext context)        
         {
@@ -32,10 +34,6 @@ namespace core10_graphql_postgres.GraphQL.Mutations;
 
             if (input.TwoFactorEnabled == true)
             {
-                // if (string.IsNullOrEmpty(user.Secretkey))
-                // {
-                //     user.Secretkey = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 10);
-                // }                
                 var companyName = "Apple Inc.";
                 TwoFactorAuthenticator twoFactor = new();
                 var setupInfo = twoFactor.GenerateSetupCode(companyName, user.Email, user.Secretkey, false, 3);
@@ -56,16 +54,24 @@ namespace core10_graphql_postgres.GraphQL.Mutations;
     }
 
 // ======Execute in Nitro, Request and GraphQL Variables=======
-// mutation ActivateMfa($input: ActivationInput!) {
+// mutation ActivateMfa($input: MfaActivationInput!) {
 //   mfaActivation(input: $input) {
-//     message
 //   }
-// }
+// }    // activationResponse {
+    //   user {
+    //     id        
+    //   }
+    //   message
+    // }
+
+
 
 // GraphQL Variables
 // {
-//   "input": {
+//   "input": {    
+//     "input": {
 //     "id": 1,
-//     "twoFactorEnabled": true
+//     "twoFactorEnabled": false
+//     }
 //   }
 // }

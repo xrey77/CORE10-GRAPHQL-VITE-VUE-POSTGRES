@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace core10_graphql_postgres.GraphQL.Mutations;
 
-    public record UpdatePasswordInput(int Id, string Password);
+    public record PasswordInput(
+        [property: ID] int Id,
+        string Password);
     public record ResponseMessage(User User, string Message);
 
     [ExtendObjectType("Mutation")]
@@ -13,9 +15,9 @@ namespace core10_graphql_postgres.GraphQL.Mutations;
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]        
         [UseMutationConvention]
-        public async Task<ResponseMessage> UpdatePassword(
-            UpdatePasswordInput input, 
-            [Service] GraphqlDbContext context)        
+        public async Task<ResponseMessage> UpdatePasswordAsync(
+            PasswordInput input, 
+            GraphqlDbContext context)        
         {
 
             var user = await context.Users
@@ -41,17 +43,24 @@ namespace core10_graphql_postgres.GraphQL.Mutations;
     }
 
 // ======Execute in Nitro, Request and GraphQL Variables=======
-// mutation UpdateUserPassword($input: UpdatePasswordInput!) {
+// mutation ChangeUserPassword($input: UpdatePasswordInput!) {
 //   updatePassword(input: $input) {
-//     message
+//     responseMessage {
+//       user {
+//         id
+//         password
+//       }
+//       message
+//     }
 //   }
 // }
 
 // GraphQL Variables
 // {
-// {
 //   "input": {
+//     "input": {
 //     "id": 1,
 //     "password": "nald"
+//     }
 //   }
 // }
