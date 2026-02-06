@@ -154,10 +154,7 @@
     import Footer from '../components/Footer.vue';
     import jQuery from 'jquery';
     import axios from 'axios';
-import { errorMessages } from 'vue/compiler-sfc';
-    
-    // const selectedFile = ref<File | null>(null);
-    
+        
     const api = axios.create({
         baseURL: "http://localhost:5094"
     })
