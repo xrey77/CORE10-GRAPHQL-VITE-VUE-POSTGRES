@@ -3,6 +3,7 @@ using core10_graphql_postgres.Helpers;
 using HotChocolate;
 using Google.Authenticator;
 using Microsoft.EntityFrameworkCore;
+using HotChocolate.Authorization;
 
 namespace core10_graphql_postgres.GraphQL.Mutations;
 
@@ -13,6 +14,7 @@ namespace core10_graphql_postgres.GraphQL.Mutations;
     public class OtpVerification
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]        
+        [Authorize]
         [UseMutationConvention]
         public async Task<TotpMessage> VerifyTotp(
             TotpInput input, 

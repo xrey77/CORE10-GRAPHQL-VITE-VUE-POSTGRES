@@ -3,6 +3,7 @@ using core10_graphql_postgres.Helpers;
 using HotChocolate;
 using Google.Authenticator;
 using Microsoft.EntityFrameworkCore;
+using HotChocolate.Authorization;
 
 namespace core10_graphql_postgres.GraphQL.Mutations;
 
@@ -14,6 +15,7 @@ namespace core10_graphql_postgres.GraphQL.Mutations;
     [ExtendObjectType("Mutation")]
     public class ActivateMfa
     {
+        [Authorize]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]        
         [UseMutationConvention]
         public async Task<ActivationResponse> MfaActivationAsync(

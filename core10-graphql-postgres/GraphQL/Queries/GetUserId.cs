@@ -1,5 +1,6 @@
 using core10_graphql_postgres.Entities;
 using core10_graphql_postgres.Helpers;
+using HotChocolate.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace core10_graphql_postgres.GraphQL.Queries;
@@ -7,6 +8,7 @@ namespace core10_graphql_postgres.GraphQL.Queries;
 [ExtendObjectType("Query")]
 public class GetUser
 {
+  [Authorize]    
   [UseProjection]
   public IQueryable<User> GetUserById(
         [Service] GraphqlDbContext context,

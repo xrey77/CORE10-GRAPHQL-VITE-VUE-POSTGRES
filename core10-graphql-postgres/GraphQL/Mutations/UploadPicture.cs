@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp;
 using Path = System.IO.Path;
+using HotChocolate.Authorization;
 
 namespace core10_graphql_postgres.GraphQL.Mutations;
 
@@ -19,6 +20,7 @@ public class UploadResponse
 public class ChangeProfilePic
 {
     
+    [Authorize]
     public async Task<UploadResponse> ProfilePicUploadAsync(
         int id,
         IFile profilepic,

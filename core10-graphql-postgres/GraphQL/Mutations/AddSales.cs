@@ -1,6 +1,7 @@
 using core10_graphql_postgres.Entities;
 using core10_graphql_postgres.Helpers;
-using HotChocolate; 
+using HotChocolate;
+using HotChocolate.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace core10_graphql_postgres.GraphQL.Mutations;
@@ -16,6 +17,7 @@ public class AddSales
 {
     
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]        
+    [Authorize]
     [UseMutationConvention]
     public async Task<SaleResponse> CreateSale(SaleInput input, 
         [Service] GraphqlDbContext context)        

@@ -1,6 +1,7 @@
 using core10_graphql_postgres.Entities;
 using core10_graphql_postgres.Helpers;
 using HotChocolate;
+using HotChocolate.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace core10_graphql_postgres.GraphQL.Queries;
@@ -11,6 +12,7 @@ namespace core10_graphql_postgres.GraphQL.Queries;
 [ExtendObjectType("Query")]
 public class ProductSearch
 {
+    [AllowAnonymous]
     public async Task<SearchResponse> SearchProducts(
         KeyInput input, 
         [Service] GraphqlDbContext context)        

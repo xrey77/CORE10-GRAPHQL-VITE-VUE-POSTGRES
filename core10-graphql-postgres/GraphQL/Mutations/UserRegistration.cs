@@ -6,6 +6,7 @@ using core10_graphql_postgres.Helpers;
 using HotChocolate; 
 using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics;
+using HotChocolate.Authorization;
 
 namespace core10_graphql_postgres.GraphQL.Mutations;
 
@@ -28,6 +29,7 @@ public class UserRegistration
         .Build();
 
     
+    [AllowAnonymous]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]        
     [UseMutationConvention]
     public async Task<RegistrationResponse> Signup(SignupInput input, 

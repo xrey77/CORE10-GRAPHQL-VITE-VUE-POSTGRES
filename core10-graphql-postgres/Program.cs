@@ -1,7 +1,10 @@
+using System.Text;
 using core10_graphql_postgres.GraphQL.Mutations;
 using core10_graphql_postgres.GraphQL.Queries;
 using core10_graphql_postgres.Helpers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +19,26 @@ builder.Services.AddPooledDbContextFactory<GraphqlDbContext>(options =>
            .UseSnakeCaseNamingConvention();
 });
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+builder.Services.AddAuthorization();
+
 // Register with Hot Chocolate
 builder.Services
     .AddGraphQLServer()
+    .AddAuthorization()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)    
     .AddQueryType(d => d.Name("Query"))
     .AddTypeExtension<GetallUsers>()
@@ -65,18 +85,17 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ===== AUTO CREATE TABLES ===============================
-// using (var scope = app.Services.CreateScope())
-// {
-//     var db = scope.ServiceProvider.GetRequiredService<GraphqlDbContext>();
-//     // await db.Database.MigrateAsync(); 
-//     await db.Database.EnsureCreatedAsync();
-// }
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<GraphqlDbContext>();
+    // await db.Database.MigrateAsync(); 
+    await db.Database.EnsureCreatedAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -85,10 +104,6 @@ app.UseCors( options => options.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin
 
 app.MapControllers();
 app.MapGraphQL();
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller}/{action=Index}/{id?}");
-
 app.MapFallbackToFile("index.html");
 
 app.Run();

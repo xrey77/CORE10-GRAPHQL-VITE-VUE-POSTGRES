@@ -215,7 +215,11 @@
                 };
 
                 try {
-                    const res = await api.post('/graphql', userPayload); 
+                    const res = await api.post('/graphql', userPayload, {
+                headers: {
+                    Authorization: `Bearer ${this.token}`                 }
+
+                    }); 
                     
                     if (res.data.errors) {
                         this.profileMsg = res.data.errors[0].message;
@@ -267,7 +271,11 @@
                 };
 
                 try {
-                    const res = await api.post('/graphql', profilePayload); 
+                    const res = await api.post('/graphql', profilePayload, {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`
+                        }
+                    }); 
                     
                     if (res.data.errors) {
                         this.profileMsg = res.data.errors[0].message;
@@ -329,7 +337,11 @@
                 };
 
                 try {
-                    const res = await api.post('/graphql', changePayload); 
+                    const res = await api.post('/graphql', changePayload, {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`
+                        }
+                    }); 
                     
                     if (res.data.errors) {
                         this.profileMsg = res.data.errors[0].message;
@@ -380,7 +392,8 @@
                     const res = await api.post('/graphql', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
-                            'GraphQL-Preflight': '1'
+                            'GraphQL-Preflight': '1',
+                            Authorization: `Bearer ${this.token}`
                         }
                     });
 
@@ -454,7 +467,11 @@
                 };
 
                 try {
-                    const res = await api.post('/graphql', enablePayload); 
+                    const res = await api.post('/graphql', enablePayload, {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`
+                        }
+                    }); 
                     
                     if (res.data.errors) {
                         this.profileMsg = res.data.errors[0].message;
@@ -499,7 +516,11 @@
                 };
 
                 try {
-                    const res = await api.post('/graphql', disablePayload); 
+                    const res = await api.post('/graphql', disablePayload, {
+                        headers: {
+                            Authorization: `Bearer ${this.token}`
+                        }
+                    }); 
                     
                     if (res.data.errors) {
                         this.profileMsg = res.data.errors[0].message;

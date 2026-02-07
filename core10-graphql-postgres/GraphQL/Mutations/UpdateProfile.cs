@@ -1,7 +1,8 @@
     using core10_graphql_postgres.Entities;
     using core10_graphql_postgres.Helpers;
     using HotChocolate;
-    using Microsoft.EntityFrameworkCore;
+using HotChocolate.Authorization;
+using Microsoft.EntityFrameworkCore;
 
     namespace core10_graphql_postgres.GraphQL.Mutations;
 
@@ -20,6 +21,7 @@
     [ExtendObjectType("Mutation")]
     public class UpdateUserProfile
     {
+        [Authorize]
         [UseMutationConvention]
         public async Task<ProfileMessage> UpdateProfileAsync(
             ProfileInput input,

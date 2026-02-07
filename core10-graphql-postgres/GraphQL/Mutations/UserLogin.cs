@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
+using HotChocolate.Authorization;
 
 public record SigninInput(string Username, string Password);
 
@@ -25,6 +26,7 @@ public class UserLogin
 
 
     // [UseMutationConvention]
+    [AllowAnonymous]
     [UseMutationConvention(Disable = true)]     
     public async Task<SigninResponse> Signin(
         SigninInput input, 

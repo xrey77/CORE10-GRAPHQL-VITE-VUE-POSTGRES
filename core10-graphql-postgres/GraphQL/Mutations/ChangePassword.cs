@@ -1,6 +1,7 @@
 using core10_graphql_postgres.Entities;
 using core10_graphql_postgres.Helpers;
 using HotChocolate;
+using HotChocolate.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace core10_graphql_postgres.GraphQL.Mutations;
@@ -14,6 +15,7 @@ namespace core10_graphql_postgres.GraphQL.Mutations;
     public class ChangeUserPassword
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]        
+        [Authorize]
         [UseMutationConvention]
         public async Task<ResponseMessage> UpdatePasswordAsync(
             PasswordInput input, 
